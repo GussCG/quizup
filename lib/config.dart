@@ -1,0 +1,4 @@
+const API_URL = 'http://10.0.2.2:8000';
+const SUPABASE_URL = 'https://svmyqkyatptgwidqfrsm.supabase.co';
+const SUPABASE_ANON_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2bXlxa3lhdHB0Z3dpZHFmcnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk4ODA1MDUsImV4cCI6MjA2NTQ1NjUwNX0.WF4kid1GK4Qn3NPNB3A1IRVqmkRE3_8LZUD8UP_H7KE';
