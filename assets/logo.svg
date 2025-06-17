@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Capa_1" data-name="Capa 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 465.86 186.69">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: url(#Degradado_sin_nombre_83);
+        stroke-miterlimit: 10;
+        stroke-width: 12px;
+      }
+
+      .cls-2 {
+        fill: url(#Degradado_sin_nombre_83-2);
+        stroke-width: 0px;
+      }
+
+      .cls-3 {
+        fill: #000;
+        font-family: PlusJakartaSans-Bold, 'Plus Jakarta Sans';
+        font-size: 102.66px;
+        font-weight: 700;
+      }
+    </style>
+    <linearGradient id="Degradado_sin_nombre_83" data-name="Degradado sin nombre 83" x1="62.24" y1="101.51" x2="389.67" y2="101.51" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000"/>
+      <stop offset="1" stop-color="#bd000d"/>
+    </linearGradient>
+    <linearGradient id="Degradado_sin_nombre_83-2" data-name="Degradado sin nombre 83" x1="62.24" y1="21.05" x2="389.67" y2="21.05" xlink:href="#Degradado_sin_nombre_83"/>
+  </defs>
+  <text class="cls-3" transform="translate(0 118.41)"><tspan x="0" y="0">QuizUp</tspan></text>
+  <g>
+    <path class="cls-1" d="M67.27,123.58c60.31,92.34,389.85,83.02,301.43-104.69"/>
+    <path class="cls-2" d="M369.67,21.1c-2.67,8.45-12.3,16.82-19.82,21,6.29-12.95,10.08-27.51,8.86-42.1,11.03,9.5,25.43,14.06,39.54,16.97-8.51,3.59-19.47,6.74-28.58,4.13Z"/>
+  </g>
+</svg>

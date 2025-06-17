@@ -51,6 +51,10 @@ class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(routerConfig: router, theme: ThemeData.light());
+    return MaterialApp.router(
+      routerConfig: router,
+      theme: ThemeData.light(),
+      title: 'QuizUp',
+    );
   }
 }

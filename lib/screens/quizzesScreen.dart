@@ -29,14 +29,6 @@ class QuizzesScreen extends StatelessWidget {
             return const Center(child: Text('No categories available'));
           }
 
-          final colors = [
-            Colors.red[100]!,
-            Colors.blue[100]!,
-            Colors.green[100]!,
-            Colors.yellow[100]!,
-            Colors.purple[100]!,
-          ];
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -61,7 +53,6 @@ class QuizzesScreen extends StatelessWidget {
                   itemCount: categories.length,
                   itemBuilder: (context, index) {
                     final category = categories[index];
-                    final color = colors[index % colors.length];
                     return GestureDetector(
                       onTap: () {
                         context.go(

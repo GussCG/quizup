@@ -17,10 +17,7 @@ class IndexScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'QuizUp',
-              style: AppTextStyles.bodyMainTitleText as TextStyle?,
-            ),
+            Image.asset('assets/logo.png', width: 270),
             SizedBox(height: 42),
             Padding(
               padding: const EdgeInsets.symmetric(

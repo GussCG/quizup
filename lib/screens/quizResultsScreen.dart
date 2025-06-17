@@ -3,13 +3,14 @@ import 'package:flutter_quizapp/core/theme/app_text_styles.dart';
 import 'package:flutter_quizapp/core/widgets/mainButton.dart';
 import 'package:go_router/go_router.dart';
 
-class QuizResultScreen extends StatelessWidget {
+class QuizResultScreen extends StatefulWidget {
   final int score;
   final int totalQuestions;
   final String categoryId;
   final String categoryName;
   final String categoryImage;
   final String categoryDescription;
+
   const QuizResultScreen({
     super.key,
     required this.score,
@@ -20,8 +21,13 @@ class QuizResultScreen extends StatelessWidget {
     this.categoryDescription = 'No description available',
   });
 
+  @override
+  State<QuizResultScreen> createState() => _QuizResultScreenState();
+}
+
+class _QuizResultScreenState extends State<QuizResultScreen> {
   String _getMessage() {
-    final percent = (score / totalQuestions) * 100;
+    final percent = (widget.score / widget.totalQuestions) * 100;
     if (percent >= 90) {
       return '¡Excelente trabajo!';
     } else if (percent >= 75) {
@@ -35,7 +41,7 @@ class QuizResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final incorrect = totalQuestions - score;
+    final incorrect = widget.totalQuestions - widget.score;
 
     return Scaffold(
       appBar: AppBar(
@@ -49,19 +55,13 @@ class QuizResultScreen extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
-                categoryImage,
+                widget.categoryImage,
                 width: double.infinity,
                 height: 250,
                 fit: BoxFit.cover,
               ),
             ),
             const SizedBox(height: 16),
-            // Text(
-            //   'Resultados',
-            //   style: AppTextStyles.bodyMainTitleText.copyWith(fontSize: 28),
-            //   textAlign: TextAlign.center,
-            // ),
-            // const SizedBox(height: 8),
             Text(
               _getMessage(),
               style: AppTextStyles.bodyTitle.copyWith(
@@ -73,7 +73,7 @@ class QuizResultScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             Text(
-              'Has completado el cuestionario de $categoryName. Echa un vistazo a tus resultados a continuación.',
+              'Has completado el cuestionario de ${widget.categoryName}. Echa un vistazo a tus resultados a continuación.',
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyText.copyWith(
                 fontSize: 17,
@@ -109,7 +109,7 @@ class QuizResultScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '$score / $totalQuestions',
+                    '${widget.score} / ${widget.totalQuestions}',
                     style: AppTextStyles.bodyText.copyWith(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
@@ -127,14 +127,14 @@ class QuizResultScreen extends StatelessWidget {
               children: [
                 _buildScoreBar(
                   label: 'Correctas',
-                  value: score,
-                  total: totalQuestions,
+                  value: widget.score,
+                  total: widget.totalQuestions,
                   color: Colors.green,
                 ),
                 _buildScoreBar(
                   label: 'Incorrectas',
                   value: incorrect,
-                  total: totalQuestions,
+                  total: widget.totalQuestions,
                   color: Colors.red,
                 ),
               ],
@@ -145,11 +145,11 @@ class QuizResultScreen extends StatelessWidget {
               text: 'Intentarlo Otra Vez',
               onPressed: () {
                 context.go(
-                  '/quiz-category/${categoryId}',
+                  '/quiz-category/${widget.categoryId}',
                   extra: {
-                    'categoryName': categoryName,
-                    'categoryImage': categoryImage,
-                    'categoryDescription': categoryDescription,
+                    'categoryName': widget.categoryName,
+                    'categoryImage': widget.categoryImage,
+                    'categoryDescription': widget.categoryDescription,
                   },
                 );
               },

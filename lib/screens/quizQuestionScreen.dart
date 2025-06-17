@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_quizapp/core/theme/app_text_styles.dart';
 import 'package:flutter_quizapp/core/widgets/mainButton.dart';
@@ -25,6 +26,8 @@ class _QuizQuestionScreenState extends State<QuizQuestionScreen>
   bool isAnswered = false;
   String? selectedAnswer;
   List<String> shuffledOptions = [];
+
+  List<Map<String, dynamic>> userAnswers = [];
 
   @override
   void initState() {
@@ -89,15 +92,22 @@ class _QuizQuestionScreenState extends State<QuizQuestionScreen>
     _controller.forward();
   }
 
-  void _handleSubmit(BuildContext context) {
+  void _handleSubmit(BuildContext context) async {
     _controller.stop();
 
     final currentQuestion = questions[currentQuestionIndex];
     final correctAnswer = currentQuestion.correctAnswer;
 
-    if (selectedAnswer == correctAnswer) {
+    final isCorrect = selectedAnswer == correctAnswer;
+    if (isCorrect) {
       score++;
     }
+
+    userAnswers.add({
+      'question_id': currentQuestion.id,
+      'user_answer': selectedAnswer,
+      'is_correct': isCorrect,
+    });
 
     if (currentQuestionIndex < questions.length - 1) {
       setState(() {
@@ -108,6 +118,46 @@ class _QuizQuestionScreenState extends State<QuizQuestionScreen>
       _setShuffledOptions();
       _startTimer();
     } else {
+      try {
+        // 1. Enviar solo los datos generales del quiz
+        final resultResponse = await ApiService.submitQuizResult({
+          "categoria": widget.categoryId,
+          "score": score,
+          "total_questions": questions.length,
+        });
+
+        if (resultResponse.statusCode != 200) {
+          debugPrint("Error al guardar resultado: ${resultResponse.body}");
+          return;
+        }
+
+        final resultData = jsonDecode(resultResponse.body);
+        final resultId = resultData['id'];
+
+        // 2. Enviar las respuestas con el ID del resultado
+        final answersPayload =
+            userAnswers.map((answer) {
+              return {
+                "question_id": answer['question_id'],
+                "user_answer": answer['user_answer'],
+                "is_correct": answer['is_correct'],
+              };
+            }).toList();
+
+        final answersResponse = await ApiService.submitUserAnswers(
+          resultId.toString(),
+          answersPayload,
+        );
+
+        if (answersResponse.statusCode != 200) {
+          debugPrint("Error al guardar respuestas: ${answersResponse.body}");
+          return;
+        }
+      } catch (e) {
+        debugPrint("Error al hacer submitQuiz: $e");
+      }
+
+      // Luego haces el cambio de pantalla
       context.go(
         '/quiz-results',
         extra: {

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quizapp/core/theme/app_text_styles.dart';
 import 'package:flutter_quizapp/core/widgets/startQuizButton.dart';
+import 'package:flutter_quizapp/services/api_service.dart';
 import 'package:go_router/go_router.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
-class QuizCategoryMainScreen extends StatelessWidget {
+class QuizCategoryMainScreen extends StatefulWidget {
   final String? categoryId;
   final String? categoryName;
   final String? categoryImage;
@@ -18,24 +20,47 @@ class QuizCategoryMainScreen extends StatelessWidget {
   });
 
   @override
+  State<QuizCategoryMainScreen> createState() => _QuizCategoryMainScreenState();
+}
+
+class _QuizCategoryMainScreenState extends State<QuizCategoryMainScreen> {
+  List<dynamic> _topRanking = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTopRanking();
+  }
+
+  Future<void> _fetchTopRanking() async {
+    try {
+      final ranking = await ApiService.getRankingByCategory(widget.categoryId!);
+      setState(() {
+        _topRanking = ranking;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final extra = GoRouterState.of(context).extra as Map<String, dynamic>?;
 
-    final name = extra?['categoryName'] ?? categoryName ?? 'Unknown Category';
+    final name =
+        extra?['categoryName'] ?? widget.categoryName ?? 'Unknown Category';
     final image =
         extra?['categoryImage'] ??
-        categoryImage ??
+        widget.categoryImage ??
         'assets/category/defaultCategory.jpg';
     final description =
         extra?['categoryDescription'] ??
-        categoryDescription ??
+        widget.categoryDescription ??
         'No description available';
-
-    final List<Map<String, dynamic>> topRanking = [
-      {'name': 'User1', 'score': 100},
-      {'name': 'User2', 'score': 90},
-      {'name': 'User3', 'score': 80},
-    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -53,53 +78,138 @@ class QuizCategoryMainScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                image,
-                width: double.infinity,
-                height: 250,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text('$name', style: AppTextStyles.bodyTitle),
-            Text(
-              '$description',
-              style: AppTextStyles.bodyText,
-              textAlign: TextAlign.left,
-            ),
-            const SizedBox(height: 8),
-            Divider(color: Colors.grey.shade300, thickness: 5),
-            Text('Top Rankings', style: AppTextStyles.bodyTitle),
-            const SizedBox(height: 8),
             Expanded(
-              child: ListView.separated(
-                itemCount: topRanking.length,
-                separatorBuilder: (_, __) => Divider(),
-                itemBuilder: (context, index) {
-                  final rank = index + 1;
-                  final item = topRanking[index];
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.grey.shade200,
+              child: ListView(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.asset(
+                      image,
+                      width: double.infinity,
+                      height: 250,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(name, style: AppTextStyles.bodyTitle),
+                  Text(
+                    description,
+                    style: AppTextStyles.bodyText,
+                    textAlign: TextAlign.left,
+                    maxLines: null,
+                  ),
+                  const SizedBox(height: 8),
+                  Divider(color: Colors.grey.shade300, thickness: 5),
+                  Text('Top Rankings', style: AppTextStyles.bodyTitle),
+                  const SizedBox(height: 8),
+
+                  if (_isLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else if (_topRanking.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
                       child: Text(
-                        '$rank',
-                        style: AppTextStyles.rankingNumberText,
+                        'Nada por aquí aún. Sé el primero en jugar y liderar el ranking.',
+                        style: AppTextStyles.bodyText,
+                        textAlign: TextAlign.center,
                       ),
+                    )
+                  else
+                    ListView.separated(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: _topRanking.length,
+                      separatorBuilder: (_, __) => const Divider(),
+                      itemBuilder: (context, index) {
+                        final rank = index + 1;
+                        final item = _topRanking[index];
+
+                        Color getMedalColor(int rank) {
+                          switch (rank) {
+                            case 1:
+                              return Color.fromARGB(
+                                255,
+                                255,
+                                217,
+                                0,
+                              ); // Oro (Gold)
+                            case 2:
+                              return Color.fromARGB(
+                                255,
+                                189,
+                                189,
+                                189,
+                              ); // Plata (Silver)
+                            case 3:
+                              return Color.fromARGB(
+                                255,
+                                187,
+                                124,
+                                62,
+                              ); // Bronce (Bronze)
+                            default:
+                              return Colors.white; // Los demás blanco
+                          }
+                        }
+
+                        return Container(
+                          decoration: BoxDecoration(
+                            color:
+                                Colors
+                                    .grey
+                                    .shade100, // Fondo claro, puedes cambiar el color
+                            borderRadius: BorderRadius.circular(
+                              12,
+                            ), // Esquinas redondeadas
+                          ),
+                          margin: const EdgeInsets.symmetric(
+                            vertical: 6,
+                            horizontal: 0,
+                          ), // Separación entre tiles
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              radius: 28,
+                              backgroundColor: getMedalColor(rank),
+                              child: Text(
+                                '$rank',
+                                style: AppTextStyles.rankingNumberText,
+                              ),
+                            ),
+                            title: Text(
+                              item['user_name'] ?? 'Anónimo',
+                              style: AppTextStyles.rankingNameText.copyWith(
+                                color: Colors.black87,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 22,
+                              ),
+                            ),
+                            subtitle:
+                                item['answered_at'] != null
+                                    ? Text(
+                                      '${timeago.format(DateTime.parse(item['answered_at']))}',
+                                      style: AppTextStyles.bodyText.copyWith(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 12,
+                                      ),
+                                    )
+                                    : const SizedBox.shrink(),
+                            trailing: Text(
+                              '${item['score'] * 10} pts',
+                              style: AppTextStyles.bodyText.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                    title: Text(
-                      item['name'],
-                      style: AppTextStyles.rankingNameText,
-                    ),
-                    trailing: Text(
-                      '${item['score']} pts',
-                      style: AppTextStyles.bodyText,
-                    ),
-                  );
-                },
+                  const SizedBox(height: 16),
+                ],
               ),
             ),
+
+            // Botón fijo abajo, siempre visible
             Center(
               child: SizedBox(
                 width: 350,
@@ -107,7 +217,7 @@ class QuizCategoryMainScreen extends StatelessWidget {
                   text: 'Empezar Quiz',
                   onPressed: () {
                     context.go(
-                      '/quiz-question/${Uri.encodeComponent(categoryId ?? '')}',
+                      '/quiz-question/${Uri.encodeComponent(widget.categoryId ?? '')}',
                       extra: {
                         'categoryName': name,
                         'categoryImage': image,
@@ -118,6 +228,7 @@ class QuizCategoryMainScreen extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 16), // un poco de espacio debajo del botón
           ],
         ),
       ),

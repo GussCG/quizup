@@ -42,9 +42,9 @@ class ApiService {
     final random = Random();
     final Set<int> randomPages = {};
 
-    // Elige 3 páginas distintas aleatorias entre 1 y 10
+    // Solo páginas 1 a 3
     while (randomPages.length < 3) {
-      randomPages.add(random.nextInt(10) + 1);
+      randomPages.add(random.nextInt(3) + 1);
     }
 
     List<Question> allQuestions = [];
@@ -66,17 +66,62 @@ class ApiService {
       }
     }
 
-    allQuestions.shuffle(); // Mezcla
-    return allQuestions.take(10).toList(); // Toma 10 aleatorias
+    allQuestions.shuffle();
+    return allQuestions.take(10).toList(); // Devuelve solo 10 aleatorias
   }
 
-  static Future<http.Response> submitQuiz(Map<String, dynamic> quizData) async {
+  static Future<http.Response> submitQuizResult(
+    Map<String, dynamic> quizResultData,
+  ) async {
+    final token = AuthService.token;
+    if (token == null) throw Exception('No token, user not logged in');
+    print('Submitting quiz result: $quizResultData');
+    return http.post(
+      Uri.parse('$_baseUrl/quiz/submit/result'),
+      headers: _authHeaders(token),
+      body: jsonEncode(quizResultData),
+    );
+  }
+
+  static Future<http.Response> submitUserAnswers(
+    String resultId,
+    List<Map<String, dynamic>> answers,
+  ) async {
     final token = AuthService.token;
     if (token == null) throw Exception('No token, user not logged in');
     return http.post(
-      Uri.parse('$_baseUrl/quiz/submit'),
+      Uri.parse('$_baseUrl/quiz/submit/answers?result_id=$resultId'),
       headers: _authHeaders(token),
-      body: jsonEncode(quizData),
+      body: jsonEncode(answers),
     );
+  }
+
+  static Future<List<dynamic>> getRankingByCategory(String category) async {
+    final response = await http.get(Uri.parse('$_baseUrl/ranking/$category'));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Error al obtener ranking');
+    }
+  }
+
+  static Future<List<dynamic>> getQuizzesByUser(String userId) async {
+    final token = AuthService.token;
+    if (token == null) throw Exception('No token, user not logged in');
+
+    print('Fetching quizzes for user: $userId');
+
+    final uri = Uri.parse(
+      '$_baseUrl/quiz/me',
+    ).replace(queryParameters: {'user_id': userId});
+
+    final response = await http.get(uri, headers: _authHeaders(token));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body); // Mapea según tu modelo si quieres
+    } else {
+      throw Exception('Error al obtener quizzes del usuario');
+    }
   }
 }

@@ -13,10 +13,19 @@ class Category {
 
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
-      id: json['id'],
-      name: json['name'],
+      id: json['id'] as String,
+      name: json['name'] as String,
       imagePath: 'assets/category/${json['id']}.jpg',
-      description: json['description'],
+      description: json['description'] as String? ?? 'No description available',
+    );
+  }
+
+  factory Category.empty() {
+    return Category(
+      id: '0',
+      name: 'Categoría desconocida',
+      imagePath: '',
+      description: 'No description available',
     );
   }
 }

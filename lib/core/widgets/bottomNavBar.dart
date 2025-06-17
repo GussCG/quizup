@@ -3,7 +3,7 @@ import 'package:flutter_quizapp/core/theme/app_colors.dart';
 import 'package:flutter_quizapp/core/theme/app_text_styles.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class BottomNavBar extends StatelessWidget {
+class BottomNavBar extends StatefulWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
@@ -14,69 +14,105 @@ class BottomNavBar extends StatelessWidget {
   });
 
   @override
+  State<BottomNavBar> createState() => _BottomNavBarState();
+}
+
+class _BottomNavBarState extends State<BottomNavBar> {
+  @override
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       elevation: 0,
-      currentIndex: currentIndex,
-      onTap: onTap,
+      currentIndex: widget.currentIndex,
+      onTap: widget.onTap,
       selectedItemColor: AppColors.navBarIconSelected,
       unselectedItemColor: AppColors.navBarIconUnselected,
-      showSelectedLabels: true,
+      showSelectedLabels: false,
       showUnselectedLabels: false,
       selectedLabelStyle: AppTextStyles.navBarIconSelectedText,
       unselectedLabelStyle: AppTextStyles.navBarIconUnselectedText,
-      selectedIconTheme: IconThemeData(size: 24),
-      unselectedIconTheme: IconThemeData(size: 20),
+      selectedIconTheme: const IconThemeData(size: 24),
+      unselectedIconTheme: const IconThemeData(size: 20),
       items: [
         BottomNavigationBarItem(
-          icon: _buildNavIcon(
+          icon: _buildAnimatedNavItem(
             FontAwesomeIcons.house,
-            isSelected: currentIndex == 0,
+            'Inicio',
+            isSelected: widget.currentIndex == 0,
           ),
-          label: 'Inicio',
+          label: '',
         ),
         BottomNavigationBarItem(
-          icon: _buildNavIcon(
+          icon: _buildAnimatedNavItem(
             FontAwesomeIcons.question,
-            isSelected: currentIndex == 1,
+            'Quizzes',
+            isSelected: widget.currentIndex == 1,
           ),
-          label: 'Quizzes',
+          label: '',
         ),
         BottomNavigationBarItem(
-          icon: _buildNavIcon(
+          icon: _buildAnimatedNavItem(
             FontAwesomeIcons.user,
-            isSelected: currentIndex == 2,
+            'Perfil',
+            isSelected: widget.currentIndex == 2,
           ),
-          label: 'Perfil',
+          label: '',
         ),
       ],
     );
   }
-}
 
-Widget _buildNavIcon(IconData icon, {required bool isSelected}) {
-  return Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Container(
-        padding: const EdgeInsets.all(8),
-        decoration:
-            isSelected
-                ? BoxDecoration(
-                  color: AppColors.navBarIconSelected.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                )
-                : null,
-        child: FaIcon(
-          icon,
-          color:
-              isSelected
-                  ? AppColors.navBarIconSelected
-                  : AppColors.navBarIconUnselected,
-          size: isSelected ? 20 : 18,
-        ),
+  Widget _buildAnimatedNavItem(
+    IconData icon,
+    String label, {
+    required bool isSelected,
+  }) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      padding: EdgeInsets.symmetric(
+        horizontal: isSelected ? 16 : 12,
+        vertical: 8,
       ),
-      const SizedBox(height: 4), // Gap entre ícono y texto
-    ],
-  );
+      decoration: BoxDecoration(
+        color:
+            isSelected
+                ? AppColors.navBarIconSelected.withOpacity(0.2)
+                : Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: FaIcon(
+              icon,
+              key: ValueKey(icon),
+              color:
+                  isSelected
+                      ? AppColors.navBarIconSelected
+                      : AppColors.navBarIconUnselected,
+              size: isSelected ? 20 : 18,
+            ),
+          ),
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 250),
+            crossFadeState:
+                isSelected
+                    ? CrossFadeState.showFirst
+                    : CrossFadeState.showSecond,
+            firstChild: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: AppTextStyles.navBarIconSelectedText,
+                child: Text(label),
+              ),
+            ),
+            secondChild: const SizedBox(width: 0),
+          ),
+        ],
+      ),
+    );
+  }
 }
