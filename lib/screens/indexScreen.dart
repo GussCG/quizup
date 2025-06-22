@@ -13,42 +13,47 @@ class IndexScreen extends StatelessWidget {
     final user = AuthService.currentUser;
 
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset('assets/logo.png', width: 270),
-            SizedBox(height: 42),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-              ), // o EdgeInsets.all()
-              child: Text(
-                "Prueba tus conocimientos y diviértete desafiando a tus amigos en una variedad emocionante de quizzes. Aprende y diviértete.",
-                style: AppTextStyles.bodyText,
-                textAlign: TextAlign.center,
+      body: SafeArea(
+        child: Center(
+          // Centrado vertical y horizontal
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32),
+            child: SingleChildScrollView(
+              // Scroll solo si realmente se necesita
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset('assets/logo.png', width: 270),
+                  const SizedBox(height: 42),
+                  Text(
+                    "Prueba tus conocimientos y diviértete desafiando a tus amigos en una variedad emocionante de quizzes. Aprende y diviértete.",
+                    style: AppTextStyles.bodyText,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 54),
+                  if (user != null) ...[
+                    Mainbutton(
+                      text: 'Ver Quizzes',
+                      onPressed: () {
+                        context.go('/quizzes');
+                      },
+                    ),
+                  ] else ...[
+                    Mainbutton(
+                      text: "Iniciar Sesión",
+                      onPressed: () => context.go('/login'),
+                    ),
+                    const SizedBox(height: 12),
+                    AltButton(
+                      text: "Registrarse",
+                      onPressed: () => context.go('/signup'),
+                    ),
+                  ],
+                ],
               ),
             ),
-            SizedBox(height: 54),
-            if (user != null) ...[
-              Mainbutton(
-                text: 'Ver Quizzes',
-                onPressed: () {
-                  context.go('/quizzes'); // Redirige a la pantalla de quizzes
-                },
-              ),
-            ] else ...[
-              Mainbutton(
-                text: "Iniciar Sesión",
-                onPressed: () => {context.go('/login')},
-              ),
-              SizedBox(height: 12),
-              AltButton(
-                text: "Registrarse",
-                onPressed: () => {context.go('/signup')},
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );

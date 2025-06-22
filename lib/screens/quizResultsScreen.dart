@@ -48,7 +48,8 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
         title: Text("QuizUp", style: AppTextStyles.appBarTitle),
         centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
+        // <- Permite scroll vertical si el contenido es muy alto
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
@@ -71,7 +72,6 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-
             Text(
               'Has completado el cuestionario de ${widget.categoryName}. Echa un vistazo a tus resultados a continuación.',
               textAlign: TextAlign.center,
@@ -81,11 +81,9 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
               ),
             ),
             Divider(color: Colors.grey.shade300, thickness: 5, height: 40),
-
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(10),
@@ -119,28 +117,33 @@ class _QuizResultScreenState extends State<QuizResultScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 16),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildScoreBar(
-                  label: 'Correctas',
-                  value: widget.score,
-                  total: widget.totalQuestions,
-                  color: Colors.green,
+                Flexible(
+                  // <- Evita overflow horizontal al permitir adaptarse
+                  child: _buildScoreBar(
+                    label: 'Correctas',
+                    value: widget.score,
+                    total: widget.totalQuestions,
+                    color: Colors.green,
+                  ),
                 ),
-                _buildScoreBar(
-                  label: 'Incorrectas',
-                  value: incorrect,
-                  total: widget.totalQuestions,
-                  color: Colors.red,
+                Flexible(
+                  // <- Igual aquí
+                  child: _buildScoreBar(
+                    label: 'Incorrectas',
+                    value: incorrect,
+                    total: widget.totalQuestions,
+                    color: Colors.red,
+                  ),
                 ),
               ],
             ),
-            const Spacer(),
-
+            const SizedBox(
+              height: 20,
+            ), // Añade algo de espacio final para scroll cómodo
             Mainbutton(
               text: 'Intentarlo Otra Vez',
               onPressed: () {

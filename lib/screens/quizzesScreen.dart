@@ -10,10 +10,6 @@ class QuizzesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('QuizUp', style: AppTextStyles.appBarTitle),
-        centerTitle: true,
-      ),
       body: FutureBuilder<List<Category>>(
         future: ApiService.getCategories(),
         builder: (context, snapshot) {
@@ -29,29 +25,34 @@ class QuizzesScreen extends StatelessWidget {
             return const Center(child: Text('No categories available'));
           }
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text('Categorías', style: AppTextStyles.bodyTitle),
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                floating: true,
+                snap: true,
+                expandedHeight: 50,
+                elevation: 0,
+                centerTitle: true,
+                title: Text(
+                  "QuizUp",
+                  style: AppTextStyles.appBarTitle.copyWith(
+                    color: Colors.black,
+                  ),
+                ),
               ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: GridView.builder(
+              SliverToBoxAdapter(
+                child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
-                    vertical: 10,
+                    vertical: 16,
                   ),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 3 / 2,
-                  ),
-                  itemCount: categories.length,
-                  itemBuilder: (context, index) {
+                  child: Text('Categorías', style: AppTextStyles.bodyTitle),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverGrid(
+                  delegate: SliverChildBuilderDelegate((context, index) {
                     final category = categories[index];
                     return GestureDetector(
                       onTap: () {
@@ -114,7 +115,13 @@ class QuizzesScreen extends StatelessWidget {
                         ],
                       ),
                     );
-                  },
+                  }, childCount: categories.length),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 3 / 2,
+                  ),
                 ),
               ),
             ],

@@ -17,7 +17,7 @@ class QuizQuestionScreen extends StatefulWidget {
 }
 
 class _QuizQuestionScreenState extends State<QuizQuestionScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   List<Question> questions = [];
   int currentQuestionIndex = 0;
@@ -28,6 +28,8 @@ class _QuizQuestionScreenState extends State<QuizQuestionScreen>
   List<String> shuffledOptions = [];
 
   List<Map<String, dynamic>> userAnswers = [];
+
+  final Map<String, AnimationController> _optionControllers = {};
 
   @override
   void initState() {
@@ -51,7 +53,37 @@ class _QuizQuestionScreenState extends State<QuizQuestionScreen>
   @override
   void dispose() {
     _controller.dispose();
+    for (final c in _optionControllers.values) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  AnimationController _getOptionController(String option) {
+    if (!_optionControllers.containsKey(option)) {
+      _optionControllers[option] = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 150),
+        lowerBound: 0.95,
+        upperBound: 1.0,
+      );
+      _optionControllers[option]!.value = 1.0;
+    }
+    return _optionControllers[option]!;
+  }
+
+  void _onOptionTap(String option) {
+    setState(() {
+      // Regresa todas las opciones a escala normal
+      for (final controller in _optionControllers.values) {
+        controller.reverse();
+      }
+      selectedAnswer = option;
+    });
+
+    // Anima la opción seleccionada a escala 1.0
+    final controller = _getOptionController(option);
+    controller.forward();
   }
 
   Future<void> _loadQuestions(BuildContext context) async {
@@ -210,6 +242,10 @@ class _QuizQuestionScreenState extends State<QuizQuestionScreen>
     final currentQuestion = questions[currentQuestionIndex];
     final options = shuffledOptions;
 
+    // Detecta orientación
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -241,9 +277,9 @@ class _QuizQuestionScreenState extends State<QuizQuestionScreen>
             ),
             const SizedBox(height: 16),
             if (currentQuestion.format == 'multiple')
-              _buildOptionsGrid(options)
+              _buildOptionsGrid(options, isLandscape)
             else
-              _buildOptionsColumn(options),
+              _buildOptionsColumn(options, isLandscape),
             Mainbutton(
               onPressed: () {
                 if (selectedAnswer == null) {
@@ -267,7 +303,9 @@ class _QuizQuestionScreenState extends State<QuizQuestionScreen>
     );
   }
 
-  Widget _buildOptionsGrid(List<String> options) {
+  Widget _buildOptionsGrid(List<String> options, bool isLandscape) {
+    final optionSize =
+        isLandscape ? 120.0 : 180.0; // tamaño más pequeño en landscape
     return Expanded(
       child: GridView.count(
         crossAxisCount: 2,
@@ -277,43 +315,42 @@ class _QuizQuestionScreenState extends State<QuizQuestionScreen>
         children:
             options.map((option) {
               final isSelected = option == selectedAnswer;
+              final controller = _getOptionController(option);
+
               return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    selectedAnswer = option;
-                  });
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    color:
-                        isSelected
-                            ? const Color.fromARGB(255, 44, 73, 124)
-                            : const Color.fromARGB(255, 255, 255, 255),
-                    border: Border.all(
-                      color:
-                          isSelected
-                              ? const Color.fromARGB(255, 44, 73, 124)
-                              : const Color.fromARGB(255, 203, 203, 203),
-                      width: 2,
+                onTap: () => _onOptionTap(option),
+                child: ScaleTransition(
+                  scale: controller,
+                  child: Container(
+                    width: optionSize,
+                    height: optionSize,
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.blueAccent : Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          offset: const Offset(2, 4),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Text(
-                      option,
-                      style: AppTextStyles.bodyText.copyWith(
-                        color: isSelected ? Colors.white : Colors.black,
-                        fontSize: 20,
-                        fontWeight: FontWeight.normal,
+                    alignment: Alignment.center,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
                       ),
-                      textAlign: TextAlign.center,
+                      child: Text(
+                        option,
+                        style: AppTextStyles.bodyText.copyWith(
+                          color: isSelected ? Colors.white : Colors.black,
+                          fontSize: 20,
+                          fontWeight: FontWeight.normal,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
                 ),
@@ -323,41 +360,46 @@ class _QuizQuestionScreenState extends State<QuizQuestionScreen>
     );
   }
 
-  Widget _buildOptionsColumn(List<String> options) {
+  Widget _buildOptionsColumn(List<String> options, bool isLandscape) {
+    final optionHeight = isLandscape ? 50.0 : 70.0; // menos alto en landscape
     return Expanded(
       child: ListView.builder(
         itemCount: options.length,
+        shrinkWrap: true,
         itemBuilder: (context, index) {
           final option = options[index];
           final isSelected = option == selectedAnswer;
+          final controller = _getOptionController(option);
+
           return GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedAnswer = option;
-              });
-            },
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.blueAccent : Colors.white,
-                border: Border.all(
-                  color: isSelected ? Colors.blue : Colors.grey,
-                  width: 2,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Padding(
+            onTap: () => _onOptionTap(option),
+            child: ScaleTransition(
+              scale: controller,
+              child: Container(
+                margin: const EdgeInsets.symmetric(vertical: 6),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                  horizontal: 12,
+                  vertical: 10,
                 ),
+                height: optionHeight,
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.blueAccent : Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      offset: const Offset(1, 3),
+                      blurRadius: 5,
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
                 child: Text(
                   option,
                   style: AppTextStyles.bodyText.copyWith(
                     color: isSelected ? Colors.white : Colors.black,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
                 ),

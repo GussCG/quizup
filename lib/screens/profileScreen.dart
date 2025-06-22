@@ -76,183 +76,190 @@ class _ProfileScreenState extends State<ProfileScreen> {
     DateTime? createdAtDate = DateTime.tryParse(user?.createdAt ?? '');
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("QuizUp", style: AppTextStyles.appBarTitle),
-        centerTitle: true,
-      ),
-      body:
-          user == null
-              ? Center(child: Text('No ha iniciado Sesión'))
-              : Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 100,
-                      backgroundImage:
-                          AssetImage('assets/default_user.png')
-                              as ImageProvider,
-                      backgroundColor: Colors.transparent,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            floating: true,
+            snap: true,
+            expandedHeight: 50,
+            elevation: 0,
+            title: Text(
+              "QuizUp",
+              style: AppTextStyles.appBarTitle.copyWith(color: Colors.black),
+            ),
+            centerTitle: true,
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 100,
+                    backgroundImage: AssetImage('assets/default_user.png'),
+                    backgroundColor: Colors.transparent,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        displayName ?? 'No Username',
+                        style: AppTextStyles.profileNameText,
+                      ),
+                      const SizedBox(width: 5),
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 22),
+                        onPressed: _goToEditName,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    email,
+                    style: AppTextStyles.profileEmailText.copyWith(
+                      fontSize: 16,
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          displayName ?? 'No Username',
-                          style: AppTextStyles.profileNameText,
+                  ),
+                  Text(
+                    "Se unió ${createdAtDate != null ? DateFormat('dd-MM-yyyy').format(createdAtDate) : 'Fecha no disponible'}",
+                    style: AppTextStyles.bodyText.copyWith(
+                      fontSize: 15,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Mainbutton(
+                    onPressed: () async {
+                      await AuthService.logout();
+                      context.go('/');
+                    },
+                    text: 'Cerrar Sesión',
+                  ),
+                  const Divider(
+                    height: 40,
+                    thickness: 5,
+                    color: Colors.grey,
+                    indent: 20,
+                    endIndent: 20,
+                  ),
+                  Text(
+                    'Quizzes Realizados',
+                    style: AppTextStyles.bodyTitle.copyWith(fontSize: 24),
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+
+          /// 👇 Lista de quizzes como SliverList
+          _isLoading
+              ? const SliverToBoxAdapter(
+                child: Center(child: CircularProgressIndicator()),
+              )
+              : _userQuizzes.isEmpty
+              ? const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 40),
+                  child: Center(
+                    child: Text(
+                      'No has realizado ningún quiz aún.',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              )
+              : SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final quiz = _userQuizzes[index];
+                  final createdAt =
+                      quiz['created_at'] != null
+                          ? DateTime.parse(quiz['created_at'])
+                          : null;
+                  final categoryId = quiz['categoria'];
+                  final category = _categories.firstWhere(
+                    (cat) =>
+                        cat.id.toString().trim().toLowerCase() ==
+                        categoryId.toString().trim().toLowerCase(),
+                    orElse:
+                        () => Category(
+                          id: 'unknown',
+                          name: 'Desconocida',
+                          imagePath: 'assets/category/defaultCategory.jpg',
+                          description: 'Sin descripción',
                         ),
-                        const SizedBox(width: 5),
-                        IconButton(
-                          icon: const Icon(Icons.edit, size: 22),
-                          onPressed: _goToEditName,
-                          tooltip: 'Editar Nombre',
+                  );
+
+                  final categoryImage =
+                      category.imagePath.isNotEmpty
+                          ? category.imagePath
+                          : 'assets/default_category.png';
+                  final categoryName = category.name;
+
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
-                    Text(
-                      email,
-                      style: AppTextStyles.profileEmailText.copyWith(
-                        fontSize: 16,
-                      ),
-                    ),
-                    Text(
-                      "Se unió ${createdAtDate != null ? DateFormat('dd-MM-yyyy').format(createdAtDate) : 'Fecha no disponible'}",
-                      style: AppTextStyles.bodyText.copyWith(
-                        fontSize: 15,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Mainbutton(
-                      onPressed: () async {
-                        await AuthService.logout();
-                        context.go('/'); // Redirige a la pantalla de login
-                      },
-                      text: 'Cerrar Sesión',
-                    ),
-                    const Divider(
-                      height: 40,
-                      thickness: 5,
-                      color: Colors.grey,
-                      indent: 20,
-                      endIndent: 20,
-                    ),
-                    Text(
-                      'Quizzes Realizados',
-                      style: AppTextStyles.bodyTitle.copyWith(fontSize: 24),
-                    ),
-                    const SizedBox(height: 8),
-
-                    // Aquí mostramos la lista de quizzes o un loader
-                    _isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : _userQuizzes.isEmpty
-                        ? const Expanded(
-                          child: Center(
-                            child: Text(
-                              'No has realizado ningún quiz aún.',
-                              style: TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        )
-                        : Expanded(
-                          child: ListView.builder(
-                            itemCount: _userQuizzes.length,
-                            itemBuilder: (context, index) {
-                              final quiz = _userQuizzes[index];
-                              final createdAt =
-                                  quiz['created_at'] != null
-                                      ? DateTime.parse(quiz['created_at'])
-                                      : null;
-
-                              // Busca la categoría que corresponde al quiz (suponiendo que el campo es category_id)
-                              final categoryId = quiz['categoria'];
-                              final category = _categories.firstWhere(
-                                (cat) =>
-                                    cat.id.toString().trim().toLowerCase() ==
-                                    categoryId.toString().trim().toLowerCase(),
-                                orElse:
-                                    () => Category(
-                                      id: 'unknown',
-                                      name: 'Desconocida',
-                                      imagePath:
-                                          'assets/category/defaultCategory.jpg',
-                                      description: 'Sin descripción',
-                                    ),
-                              );
-
-                              final categoryImage =
-                                  category.imagePath.isNotEmpty
-                                      ? category.imagePath
-                                      : 'assets/default_category.png';
-                              final categoryName = category.name;
-
-                              return Container(
-                                padding: const EdgeInsets.all(12),
-                                margin: const EdgeInsets.symmetric(vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.asset(
-                                        categoryImage,
-                                        width: 60,
-                                        height: 60,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            categoryName,
-                                            style: AppTextStyles.bodyTitle
-                                                .copyWith(fontSize: 16),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          if (createdAt != null)
-                                            Text(
-                                              '${DateFormat('dd-MM-yyyy').format(createdAt)} · ${timeago.format(createdAt)}',
-                                              style: AppTextStyles.bodyText
-                                                  .copyWith(
-                                                    fontSize: 13,
-                                                    color: Colors.grey.shade600,
-                                                  ),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                    Text(
-                                      '${quiz['score'] ?? 0} / ${quiz['total_questions'] ?? 0}',
-                                      style: AppTextStyles.bodyText.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            categoryImage,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
                           ),
                         ),
-                  ],
-                ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                categoryName,
+                                style: AppTextStyles.bodyTitle.copyWith(
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              if (createdAt != null)
+                                Text(
+                                  '${DateFormat('dd-MM-yyyy').format(createdAt)} · ${timeago.format(createdAt)}',
+                                  style: AppTextStyles.bodyText.copyWith(
+                                    fontSize: 13,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          '${quiz['score'] ?? 0} / ${quiz['total_questions'] ?? 0}',
+                          style: AppTextStyles.bodyText.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }, childCount: _userQuizzes.length),
               ),
+        ],
+      ),
     );
   }
 }
